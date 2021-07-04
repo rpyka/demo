@@ -7,7 +7,13 @@
   </head>
   <body>
     <script src="/js/app.js"></script>
-  	<h1>Country Search Template</h1>
-  	<p>This is here to get you started.</p>
+  	<h1>Country Search</h1>
+    <form action="JavaScript:fetchCountries()">
+        <label for="countryInput">Country name or code:</label>
+        <input type="text" id="countryInput">
+        <input type="submit" value="Go">
+    </form>
+    <table id="response">
+    </table>
   </body>
 </html>

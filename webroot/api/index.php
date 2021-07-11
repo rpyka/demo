@@ -1,7 +1,7 @@
 <?php
 header('Content-Type: application/json');
 
-$attributes = [
+$config = [
     ['attr'=>'name', 'title'=>'Country Name', 'type'=>'text'],
     ['attr'=>'alpha2Code', 'title'=>'2-Letter Code', 'type'=>'text'],
     ['attr'=>'alpha3Code', 'title'=>'3-Letter Code', 'type'=>'text'],
@@ -21,7 +21,6 @@ function fetch_countries()
     $input = filter_var($input, FILTER_SANITIZE_SPECIAL_CHARS); //Just make sure nothing crazy comes through
 
     $code_results = null;
-    $name_results = null;
     switch (strlen($input)) {
         case 0:
             send_error('Please enter some value to search');
@@ -43,25 +42,32 @@ function fetch_countries()
         $countries = json_decode($name_results, true);
     }
 
+    //combine results if needed, remove duplicates
     if ($code_results !== null) {
         $code_results = json_decode($code_results, true);
-        $countries = array_merge($countries, [$code_results]);
+        $countries = array_unique(array_merge($countries, [$code_results]), SORT_REGULAR);
     }
 
+    //If no results, return error
     if (count($countries) === 0) {
         send_error('No results found');
         return;
     }
 
+    //sort by population in descending order
+    usort($countries, function($a, $b) {
+        return $b['population'] - $a['population'];
+    });
+
     send_results($countries);
 }
 
 function send_results($countries) {
-    global $attributes;
+    global $config;
 
     foreach ($countries as $country) {
         $fields = [];
-        foreach ($attributes as $attr) {
+        foreach ($config as $attr) {
 
             switch ($attr['type']) {
                 case 'text':
@@ -71,13 +77,13 @@ function send_results($countries) {
                     $fields[] = number_format($country[$attr['attr']]);
                     break;
                 case 'image':
-                    $fields[] = '<img src=' . $country[$attr['attr']] . ' width=50px>';
+                    $fields[] = '<img src=' . $country[$attr['attr']] . ' width=50px>'; //TODO: maybe make this dynamic later?
                     break;
                 case 'other':
-                    $fields[] = $attr['function']($country[$attr['attr']]); //TODO: add function handling
+                    $fields[] = $attr['function']($country[$attr['attr']]);
                     break;
                 default:
-                    $fields[] = "error";
+                    $fields[] = '<strong>Error</strong>';
                     break;
             }
         }
@@ -85,11 +91,20 @@ function send_results($countries) {
     }
 
     $headers = [];
-    foreach ($attributes as $attr) {
+    foreach ($config as $attr) {
         $headers[] = $attr['title'];
     }
 
-    echo json_encode(['headers' => $headers, 'data' => $rows]);
+    $total_countries = count($countries);
+    $regions = implode(', ', array_unique(array_map(function ($item) { return $item['region']; }, $countries)));
+    $subregions = implode(', ', array_unique(array_map(function ($item) { return $item['subregion']; }, $countries)));
+    $summary = [
+        ['Total countries', $total_countries],
+        ['Regions', $regions],
+        ['Subregions', $subregions]
+    ];
+
+    echo json_encode(['headers' => $headers, 'data' => $rows, 'summary' => $summary]);
 }
 
 function get_http_response_code($url) {

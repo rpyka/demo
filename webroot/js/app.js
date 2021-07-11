@@ -56,12 +56,33 @@ function displayResults(results) {
     });
 
     table.appendChild(tbody);
+
+    //Lastly, add summary
+    let summary = document.createElement('div');
+    summary.className = "container";
+    results['summary'].forEach(summary_item => {
+        let row = document.createElement('div');
+        row.className = "row justify-content-center";
+
+        let cell_1 = document.createElement('div');
+        cell_1.className = "col-2 offset-md-1 h5";
+        cell_1.innerHTML = summary_item[0];
+        row.appendChild(cell_1);
+
+        let cell_2 = document.createElement('div');
+        cell_2.className = "col-3";
+        cell_2.innerHTML = summary_item[1];
+        row.appendChild(cell_2);
+
+        summary.appendChild(row);
+    });
+    container.appendChild(summary);
 }
 
 function displayError(container, error) {
-    row = document.createElement('div');
+    let row = document.createElement('div');
     row.className = "row justify-content-center";
-    cell = document.createElement('div');
+    let cell = document.createElement('div');
     cell.className = "col-4 error";
     cell.innerHTML = "<strong>" + error + "</strong>";
     row.appendChild(cell);
@@ -72,9 +93,9 @@ function showSpinner() {
     const container = document.getElementById('response');
     container.innerHTML = null;
 
-    row = document.createElement('div');
+    let row = document.createElement('div');
     row.className = "row justify-content-center";
-    cell = document.createElement('div');
+    let cell = document.createElement('div');
     cell.className = "col-4 spinner-border";
     row.appendChild(cell);
     container.appendChild(row);

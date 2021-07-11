@@ -12,14 +12,16 @@ $config = [
     ['attr'=>'languages', 'title'=>'Language(s)', 'type'=>'other', 'function'=>'get_languages']
 ];
 
-fetch_countries();
+$input = filter_var($_GET['input'], FILTER_SANITIZE_SPECIAL_CHARS); //Just make sure nothing crazy comes through
 
-function fetch_countries()
+fetch_countries($input, $config);
+
+/**
+ * @param $input
+ * @param $config
+ */
+function fetch_countries($input, $config)
 {
-    $input = $_GET['input'];
-
-    $input = filter_var($input, FILTER_SANITIZE_SPECIAL_CHARS); //Just make sure nothing crazy comes through
-
     $code_results = null;
     switch (strlen($input)) {
         case 0:
@@ -59,12 +61,14 @@ function fetch_countries()
         return $b['population'] - $a['population'];
     });
 
-    send_results($countries);
+    send_results($countries, $config);
 }
 
-function send_results($countries) {
-    global $config;
-
+/**
+ * @param $countries
+ * @param $config
+ */
+function send_results($countries, $config) {
     foreach ($countries as $country) {
         $fields = [];
         foreach ($config as $attr) {
@@ -77,7 +81,7 @@ function send_results($countries) {
                     $fields[] = number_format($country[$attr['attr']]);
                     break;
                 case 'image':
-                    $fields[] = '<img src=' . $country[$attr['attr']] . ' width=50px>'; //TODO: maybe make this dynamic later?
+                    $fields[] = '<img src=' . $country[$attr['attr']] . ' width=50px>'; //TODO: maybe make this width more dynamic later?
                     break;
                 case 'other':
                     $fields[] = $attr['function']($country[$attr['attr']]);
@@ -107,15 +111,26 @@ function send_results($countries) {
     echo json_encode(['headers' => $headers, 'data' => $rows, 'summary' => $summary]);
 }
 
+/**
+ * @param $url
+ * @return false|string
+ */
 function get_http_response_code($url) {
     $headers = get_headers($url);
     return substr($headers[0], 9, 3);
 }
 
+/**
+ * @param $error_text
+ */
 function send_error($error_text) {
     echo json_encode(['error' => $error_text]);
 }
 
+/**
+ * @param $languages
+ * @return string
+ */
 function get_languages($languages)
 {
     $list = array_map(function ($item) { return $item['name']; }, $languages);

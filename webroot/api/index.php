@@ -5,7 +5,7 @@ $config = [
     ['attr'=>'name', 'title'=>'Country Name', 'type'=>'text'],
     ['attr'=>'alpha2Code', 'title'=>'2-Letter Code', 'type'=>'text'],
     ['attr'=>'alpha3Code', 'title'=>'3-Letter Code', 'type'=>'text'],
-    ['attr'=>'flag', 'title'=>'Flag', 'type'=>'image'],
+    ['attr'=>'flag', 'title'=>'Flag', 'type'=>'image', 'alt_text'=>'name'],
     ['attr'=>'region', 'title'=>'Region', 'type'=>'text'],
     ['attr'=>'subregion', 'title'=>'Subregion', 'type'=>'text'],
     ['attr'=>'population', 'title'=>'Population', 'type'=>'number'],
@@ -81,7 +81,7 @@ function send_results($countries, $config) {
                     $fields[] = number_format($country[$attr['attr']]);
                     break;
                 case 'image':
-                    $fields[] = '<img src=' . $country[$attr['attr']] . ' width=50px>'; //TODO: maybe make this width more dynamic later?
+                    $fields[] = '<img src=' . $country[$attr['attr']] . ' alt="' . $country[$attr['alt_text']] . '" title="' . $country[$attr['alt_text']] . '" width=50px>'; //TODO: maybe make this width more dynamic later?
                     break;
                 case 'other':
                     $fields[] = $attr['function']($country[$attr['attr']]);

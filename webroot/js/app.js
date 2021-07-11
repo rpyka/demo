@@ -1,24 +1,16 @@
-//Write your javascript here, or roll your own. It's up to you.
-//Make your ajax call to http://localhost:8765/api/index.php here
-
-const attributes = [
-    {attr:'name', title:'Country Name', type:'text'},
-    {attr:'alpha2Code', title:'2-Letter Code', type:'text'},
-    {attr:'alpha3Code', title:'3-Letter Code', type:'text'},
-    {attr:'flag', title:'Flag', type:'image'},
-    {attr:'region', title:'Region', type:'text'},
-    {attr:'subregion', title:'Subregion', type:'text'},
-    {attr:'population', title:'Population', type:'number'},
-    {attr:'languages', title:'Language(s)', type:'other', function:'getLanguages'}
-]
+window.onload = function() {
+    document.getElementById("countryInput").focus();
+}
 
 function fetchCountries() {
-    var user_input = document.getElementById('countryInput').value
+    let user_input = document.getElementById('countryInput').value
 
-    var url = new URL('http://localhost:8765/api/index.php')
-    var params = {input: user_input}
+    let url = new URL('http://localhost:8765/api/index.php')
+    let params = {input: user_input}
 
     url.search = new URLSearchParams(params).toString();
+
+    showSpinner();
 
     fetch(url)
         .then(response => response.json())
@@ -26,51 +18,64 @@ function fetchCountries() {
 }
 
 function displayResults(results) {
-    const table = document.getElementById('response');
+    const container = document.getElementById('response');
     //clear old results
-    table.innerHTML = null;
+    container.innerHTML = null;
 
-    //Add a header
-    tr = document.createElement('tr');
-    attributes.forEach(attr => {
-        th = document.createElement('th');
+    if ("error" in results) {
+        displayError(container, results['error'])
+        return;
+    }
+
+    //success, now make a table
+    const table = document.createElement('table');
+    table.className = "table table-striped";
+    container.appendChild(table);
+
+    //Add header
+    const thead = document.createElement('thead');
+    let tr = document.createElement('tr');
+    results['headers'].forEach(title => {
+        let th = document.createElement('th');
         tr.appendChild(th);
-        th.innerHTML = attr['title'];
+        th.innerHTML = title;
     });
-    table.appendChild(tr);
+    thead.appendChild(tr);
+    table.appendChild(thead);
 
-    //add the data
-    results.forEach(country => {
-        console.log(country)
-        tr = document.createElement('tr');
-        attributes.forEach(attr => {
-            td = document.createElement('td');
+    //Add data
+    const tbody = document.createElement('tbody');
+    results['data'].forEach(country => {
+        let tr = document.createElement('tr');
+        country.forEach(value => {
+            let td = document.createElement('td');
             tr.appendChild(td);
-            switch (attr['type']) {
-                case 'text':
-                    td.innerHTML = country[attr['attr']];
-                    break;
-                case 'number':
-                    td.innerHTML = country[attr['attr']].toLocaleString("en-US");
-                    break;
-                case 'image':
-                    td.innerHTML = '<img src=' + country[attr['attr']] + ' width=50px>';
-                    break;
-                case 'other':
-                    td.innerHTML = window[attr['function']](country[attr['attr']]);
-                    break;
-                default:
-                    td.innerHTML = "error";
-                    break;
-            }
-
+            td.innerHTML = value;
         });
-        table.appendChild(tr);
+        tbody.appendChild(tr);
     });
+
+    table.appendChild(tbody);
 }
 
-function getLanguages() {
-    return 'hello';
+function displayError(container, error) {
+    row = document.createElement('div');
+    row.className = "row justify-content-center";
+    cell = document.createElement('div');
+    cell.className = "col-4 error";
+    cell.innerHTML = "<strong>" + error + "</strong>";
+    row.appendChild(cell);
+    container.appendChild(row);
 }
 
+function showSpinner() {
+    const container = document.getElementById('response');
+    container.innerHTML = null;
 
+    row = document.createElement('div');
+    row.className = "row justify-content-center";
+    cell = document.createElement('div');
+    cell.className = "col-4 spinner-border";
+    row.appendChild(cell);
+    container.appendChild(row);
+}
